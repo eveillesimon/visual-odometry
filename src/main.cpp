@@ -79,6 +79,17 @@ int main() {
     const std::string abs_image_dir = PROJECT_DIR + IMAGE_DIR;
 
 
+    // Rectified camera parameters
+    const cv::Mat K = (cv::Mat_<double>(3,3) << 
+        52.554261,  0.0,        682.049453,
+        0.0,        552.554261, 238.769549,
+        0.0,        0.0,        1.0
+    );
+
+    // Prepare a place to display the trajectory
+    cv::Mat trajectory = cv::Mat::zeros(cv::Size(752, 752), CV_8UC3);
+
+
     // Loop initialization
     cv::Mat previous_image = cv::imread(get_image_path(FIRST_IMAGE, abs_image_dir), cv::IMREAD_COLOR);
     cv::Mat previous_image_processed;
@@ -86,6 +97,9 @@ int main() {
  
     std::vector<cv::Point2f> previous_features;
     cv::goodFeaturesToTrack(previous_image_processed, previous_features, 500, 0.01, 5);   // last params: number of features, quality level, min. euclidian distance
+
+    cv::Mat R_global = cv::Mat::eye(3, 3, CV_64F);
+    cv::Mat t_global = cv::Mat::zeros(3, 1, CV_64F);
 
     for (int i = FIRST_IMAGE + 1; i <= LAST_IMAGE; i++) {
         cv::Mat current_image = cv::imread(get_image_path(i, abs_image_dir), cv::IMREAD_COLOR);
@@ -109,6 +123,51 @@ int main() {
         filter_outlier_features(current_image_processed, raw_features, previous_features, filtered_features, previous_filtered_features, status, errors);
         
         
+        // Translate features tracked to movement estimation
+        // Essential Mat (contains rotation and translation)
+        cv::Mat inlier_mask;
+        cv::Mat E = cv::findEssentialMat(
+            previous_filtered_features,
+            filtered_features,
+            K,
+            cv::RANSAC,
+            0.999,
+            1.0,
+            inlier_mask
+        );
+
+        // Extract rotation and translation
+        cv::Mat R_rel, t_rel;
+        cv::recoverPose(
+            E, 
+            previous_filtered_features, 
+            filtered_features, 
+            K,
+            R_rel,
+            t_rel,
+            inlier_mask 
+        );
+
+        // Update global translation and rotation
+        t_global += R_global * t_rel;
+        R_global = R_rel * R_global;
+        
+
+        // Draw trajectory 
+        double x = t_global.at<double>(0);
+        //double y = t_global.at<double>(1);
+        double z = t_global.at<double>(2);
+
+        const double zoom_factor = 3.0;
+        const int vx = 150, vz = 150;
+
+        int draw_x = static_cast<int>(x * zoom_factor) + vx;
+        int draw_z = static_cast<int>(z * zoom_factor) + vz;
+
+        cv::circle(trajectory, cv::Point(draw_x, draw_z), 2, cv::Scalar(0, 255, 0), cv::FILLED);
+
+
+
         // Managing interface with mask to avoid changing original image
         cv::Mat current_overlay = cv::Mat::zeros(current_image.size(), current_image.type());
         cv::Mat mask, current_overlay_gray;
@@ -131,7 +190,7 @@ int main() {
         
 
         // Displaying 
-        cv::Mat display, current_image_processed_bgr;
+        cv::Mat display, display_left, current_image_processed_bgr;
         cv::cvtColor(current_image_processed, current_image_processed_bgr, cv::COLOR_GRAY2BGR);
         
         cv::Mat processed_overlay = cv::Mat::zeros(current_image_processed_bgr.size(), current_image_processed_bgr.type());
@@ -142,7 +201,8 @@ int main() {
         current_image_processed_bgr.copyTo(processed_overlay, processed_mask);
 
     
-        cv::vconcat(current_overlay, processed_overlay, display);
+        cv::vconcat(current_overlay, processed_overlay, display_left);
+        cv::hconcat(display_left, trajectory, display);
         cv::imshow("Display features prev/current", display);
 
         previous_image_processed = current_image_processed.clone();

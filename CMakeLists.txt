@@ -7,11 +7,19 @@ set(TARGET_NAME visual_odometry)
 
 find_package(OpenCV REQUIRED)
 
-add_executable(${TARGET_NAME} src/main.cpp)
+set(SOURCES
+  src/main.cpp
+  src/image_sequence.cpp
+)
+
+add_executable(${TARGET_NAME} ${SOURCES})
 
 target_link_libraries(${TARGET_NAME} ${OpenCV_LIBS})
 
-target_include_directories(${TARGET_NAME} PRIVATE ${OpenCV_INCLUDE_DIRS})
+target_include_directories(${TARGET_NAME} PRIVATE 
+  ${OpenCV_INCLUDE_DIRS}
+  ${CMAKE_SOURCE_DIR}/include
+)
 
 if(MSVC)
   target_compile_options(${TARGET_NAME} PRIVATE /W4 /WX)

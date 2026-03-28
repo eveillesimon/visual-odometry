@@ -64,25 +64,29 @@ Currently using KITTI-360 perspecctive camera images.
 
 3. Building
 
-Once the project is cloned, add the `/visual-odometry/build` directory, and `cd` to this new directory.
+Once the project is cloned, add the `/visual-odometry/build` directory.
 
-Build the project: 
+Then from the project's root. Resolve dependencies and generate the Makefile: 
 ```
-cmake ..
+cmake -S . -B build -DBUILD_TESTING=ON
 ```
+
+Obviously, you can choose to disable the tests.
+
+
 
 Compile the source files:
 ```
-make -j"$(nproc)"
+cmake --build build -j"$(nproc)"
 ```
 
+4. Execute the project
 
-4. Execute
 ```
-./visual_odometry
+./build/visual_odometry
 ```
 
-
-
-
-
+Or the tests:
+```
+ctest --test-dir build --output-on-failure
+```

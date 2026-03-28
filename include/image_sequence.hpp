@@ -10,7 +10,7 @@ struct ImageSequence {
     std::string extension = ".png";
     int first_index = 0;
     int last_index = 0;
-    int current_index = first_index;
+    int current_index = 0;
     int zero_padding = 10;
 };
 

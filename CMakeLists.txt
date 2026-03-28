@@ -6,6 +6,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(TARGET_NAME visual_odometry)
 
 find_package(OpenCV REQUIRED)
+include(CTest)
 
 set(SOURCES
   src/main.cpp
@@ -25,4 +26,8 @@ if(MSVC)
   target_compile_options(${TARGET_NAME} PRIVATE /W4 /WX)
 else()
   target_compile_options(${TARGET_NAME} PRIVATE -Wall -Wextra -Wpedantic -Werror)
+endif()
+
+if(BUILD_TESTING)
+  add_subdirectory(tests)
 endif()

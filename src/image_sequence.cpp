@@ -4,7 +4,7 @@ namespace image_io {
 
 std::string build_image_path(const ImageSequence& sequence) {
     std::string name = std::to_string(sequence.current_index);
-    std::string zeroes(10 - name.length(), '0');
+    std::string zeroes(sequence.zero_padding - name.length(), '0');
     return sequence.directory + zeroes + name + sequence.extension;
 }
 

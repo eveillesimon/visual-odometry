@@ -11,6 +11,7 @@ include(CTest)
 set(SOURCES
   src/main.cpp
   src/image_sequence.cpp
+  src/image_processor.cpp
 )
 
 add_executable(${TARGET_NAME} ${SOURCES})

@@ -29,10 +29,32 @@ target_compile_definitions(test_image_sequence PRIVATE
     PROJECT_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
 )
 
+add_executable(test_image_processor
+    test_image_processor.cpp
+    ../src/image_processor.cpp
+)
+
+target_include_directories(test_image_processor PRIVATE
+    ../include
+    ${OpenCV_INCLUDE_DIRS}
+)
+
+target_link_libraries(test_image_processor PRIVATE
+    GTest::gtest_main
+    ${OpenCV_LIBS}
+)
+
+target_compile_definitions(test_image_processor PRIVATE
+    PROJECT_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
+)
+
 if(MSVC)
   target_compile_options(test_image_sequence PRIVATE /W4 /WX)
+  target_compile_options(test_image_processor PRIVATE /W4 /WX)
 else()
   target_compile_options(test_image_sequence PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  target_compile_options(test_image_processor PRIVATE -Wall -Wextra -Wpedantic -Werror)
 endif()
 
 add_test(NAME test_image_sequence COMMAND test_image_sequence)
+add_test(NAME test_image_processor COMMAND test_image_processor)
